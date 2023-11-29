@@ -26,6 +26,11 @@ public class TurnoMedicoServiceImpl implements TurnoMedicoService{
     }
 
     @Override
+    public List<TurnoMedico> obtenerTurnosLibres(){
+        return turnoMedicoDAO.obtenerTurnosLibres();
+    }
+
+    @Override
     public void actualizarTurnoMedico(TurnoMedico turnoMedico) {
         turnoMedicoDAO.actualizarTurnoMedico(turnoMedico);
     }

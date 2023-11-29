@@ -1,18 +1,16 @@
 package DAO;
 import entity.Mascota;
 import entity.Medico;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Query;
+import jakarta.persistence.*;
 
 import java.util.List;
 
 public class MedicoDAOImpl implements MedicoDAO{
-    private final EntityManager entityManager;
 
-    public MedicoDAOImpl(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public MedicoDAOImpl() {
     }
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default");
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
 
     @Override
     public void crearMedico(Medico medico) {
@@ -32,6 +30,17 @@ public class MedicoDAOImpl implements MedicoDAO{
     @Override
     public Medico obtenerMedicoPorId(Long id) {
         return entityManager.find(Medico.class, id);
+    }
+
+    @Override
+    public Medico obtenerMedicoPorNombre(String nombre){
+        try {
+            TypedQuery<Medico> query = entityManager.createQuery("SELECT m FROM Medico m WHERE m.nombre = :nombre", Medico.class);
+            query.setParameter("nombre", nombre);
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     @Override

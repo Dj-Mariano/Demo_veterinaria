@@ -1,18 +1,16 @@
 package DAO;
 import entity.TurnoMedico;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Query;
+import jakarta.persistence.*;
 
 import java.util.List;
 
 public class TurnoMedicoDAOImpl implements TurnoMedicoDAO{
-    private final EntityManager entityManager;
 
-    public TurnoMedicoDAOImpl(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public TurnoMedicoDAOImpl() {
     }
 
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default");
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
     @Override
     public void crearTurnoMedico(TurnoMedico turnoMedico) {
         EntityTransaction transaction = entityManager.getTransaction();
@@ -36,6 +34,12 @@ public class TurnoMedicoDAOImpl implements TurnoMedicoDAO{
     @Override
     public List<TurnoMedico> obtenerTodosLosTurnoMedicos() {
         Query query = entityManager.createQuery("SELECT m FROM TurnoMedico m");
+        return query.getResultList();
+    }
+
+    @Override
+    public List<TurnoMedico> obtenerTurnosLibres(){
+        TypedQuery<TurnoMedico> query = entityManager.createQuery("SELECT t FROM TurnoMedico t WHERE t.medico IS NULL", TurnoMedico.class);
         return query.getResultList();
     }
 

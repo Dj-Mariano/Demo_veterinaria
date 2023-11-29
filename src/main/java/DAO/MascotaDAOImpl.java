@@ -7,11 +7,14 @@ import java.util.List;
 
 public class MascotaDAOImpl implements MascotaDAO {
 
-    private final EntityManager entityManager;
+    //private final EntityManager entityManager;
 
-    public MascotaDAOImpl(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public MascotaDAOImpl() {
+        //this.entityManager = entityManager;
     }
+
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default");
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
 
     @Override
     public void crearMascota(Mascota mascota) {

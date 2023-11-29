@@ -1,6 +1,5 @@
 package entity;
 import jakarta.persistence.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +11,8 @@ public class Medico {
     private Long id;
 
     private String nombre;
+
+    private String contraseña;
 
     @OneToMany(mappedBy = "medico", cascade = CascadeType.ALL)
     private List<TurnoMedico> turnos = new ArrayList<>();
@@ -38,5 +39,14 @@ public class Medico {
 
     public void setTurnos(List<TurnoMedico> turnos) {
         this.turnos = turnos;
+    }
+    public void addTurno(TurnoMedico turno){
+        turnos.add(turno);
+    }
+    public String getContraseña() {
+        return contraseña;
+    }
+    public void setContraseña(String contraseña) {
+        this.contraseña = contraseña;
     }
 }

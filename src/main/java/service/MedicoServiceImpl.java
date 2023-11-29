@@ -20,6 +20,11 @@ public class MedicoServiceImpl implements MedicoService{
     }
 
     @Override
+    public Medico obtenerMedicoPorNombre(String nombre){
+        return medicoDAO.obtenerMedicoPorNombre(nombre);
+    }
+
+    @Override
     public List<Medico> obtenerTodosLosMedicos() {
         return medicoDAO.obtenerTodosLosMedicos();
     }

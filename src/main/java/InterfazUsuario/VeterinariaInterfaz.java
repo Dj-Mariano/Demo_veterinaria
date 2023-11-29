@@ -1,14 +1,7 @@
 package InterfazUsuario;
-import DAO.MascotaDAO;
-import DAO.MascotaDAOImpl;
-import DAO.TurnoMedicoDAO;
-import DAO.TurnoMedicoDAOImpl;
+import DAO.*;
 import entity.*;
-import service.MascotaService;
-import service.MedicoService;
-import service.TurnoMedicoService;
-import service.TurnoMedicoServiceImpl;
-
+import service.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -18,11 +11,15 @@ public class VeterinariaInterfaz {
     private final MascotaService mascotaService;
     private final MedicoService medicoService;
     private final TurnoMedicoService turnoMedicoService;
-    public VeterinariaInterfaz(MascotaService mascotaService, MedicoService medicoService, TurnoMedicoService turnoMedicoService) {
+
+    public VeterinariaInterfaz() {
         this.scanner = new Scanner(System.in);
-        this.mascotaService = mascotaService;
-        this.medicoService = medicoService;
-        this.turnoMedicoService = turnoMedicoService;
+        MascotaDAO mascotaDAO = new MascotaDAOImpl();
+        mascotaService = new MascotaServiceImpl(mascotaDAO);
+        TurnoMedicoDAO turnoMedicoDAO = new TurnoMedicoDAOImpl();
+        turnoMedicoService = new TurnoMedicoServiceImpl(turnoMedicoDAO);
+        MedicoDAO medicoDAO = new MedicoDAOImpl();
+        medicoService = new MedicoServiceImpl(medicoDAO);
     }
 
     public void iniciar() {
@@ -30,7 +27,9 @@ public class VeterinariaInterfaz {
             System.out.println("Seleccione una opción:");
             System.out.println("1. Registrar mascota");
             System.out.println("2. Sacar turno");
-            System.out.println("3. Salir");
+            System.out.println("3. Ingresar como médico");
+            System.out.println("4. Registrar Medico");
+            System.out.println("5. Salir");
 
             int opcion = scanner.nextInt();
             scanner.nextLine();
@@ -43,6 +42,12 @@ public class VeterinariaInterfaz {
                     sacarTurno(null);
                     break;
                 case 3:
+                    ingresarComoMedico();
+                    break;
+                case 4:
+                    registrarMedico();
+                    break;
+                case 5:
                     System.out.println("Saliendo del programa. ¡Hasta luego!");
                     scanner.close();
                     System.exit(0);
@@ -88,11 +93,12 @@ public class VeterinariaInterfaz {
         switch (tipoMascota) {
             case 1:
                 nuevaMascota = crearPerro(nombre, raza, colorPelo, edad, peso);
-                registrarMascota(nuevaMascota);
+                agregarMascota(nuevaMascota);
                 break;
+
             case 2:
                 nuevaMascota = crearGato(nombre, raza, colorPelo, edad, peso);
-                registrarMascota(nuevaMascota);
+                agregarMascota(nuevaMascota);
                 break;
             default:
                 System.out.println("Tipo de mascota no válido.");
@@ -138,6 +144,122 @@ public class VeterinariaInterfaz {
 
     }
 
+    private void registrarMedico(){
+        List<Medico> medicoList = medicoService.obtenerTodosLosMedicos();
+        String nombreUsuario = new String();
+        String contraseña;
+        clearConsola();
+        Scanner scanner = new Scanner(System.in);
+
+        boolean estado = true;
+        while (estado){
+            boolean nombreUsuarioExistente = false;
+            System.out.print("Ingrese el nombre de usuario: ");
+            nombreUsuario = scanner.nextLine();
+
+            for(Medico m : medicoList){
+                if(m.getNombre().equals(nombreUsuario)){
+                    nombreUsuarioExistente = true;
+                    System.out.println("El nombre " + nombreUsuario + " ya esta registrado");
+                    System.out.println();
+                    System.out.println();
+                    break;
+                }
+            }
+            if (!nombreUsuarioExistente) {
+                estado = false;
+            }
+        }
+
+        System.out.print("Ingrese la contraseña:");
+        contraseña = scanner.nextLine();
+
+        Medico nuevoMedico = new Medico();
+        try {
+            nuevoMedico.setNombre(nombreUsuario);
+            nuevoMedico.setContraseña(contraseña);
+            medicoService.crearMedico(nuevoMedico);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error al crear el médico. Por favor, inténtelo nuevamente.");
+        }
+        clearConsola();
+        System.out.println("Registro exitoso.");
+        System.out.println();
+    }
+
+    private void ingresarComoMedico(){
+        clearConsola();
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ingrese su nombre de usuario: ");
+        String nombreUsuario = scanner.nextLine();
+
+        Medico medico = medicoService.obtenerMedicoPorNombre(nombreUsuario);
+
+        if(medico == null) {
+            System.out.println();
+            System.out.println("Nombre de usuario incorrecto");
+            clearConsola();
+            return;
+        } else{
+            System.out.print("Ingrese su contraseña: ");
+            String contrasena = scanner.nextLine();
+            if(medico.getContraseña().equals(contrasena)){
+                System.out.println("Bienvenido, Dr. " + nombreUsuario + "!");
+            }
+            else{
+                System.out.println();
+                System.out.println("Contraseña Incorrecta");
+                clearConsola();
+                return;
+            }
+        }
+        clearConsola();
+        List<TurnoMedico> turnosLibres = turnoMedicoService.obtenerTurnosLibres();
+        if(turnosLibres.isEmpty()){
+            System.out.println("---------------------------------------------------------------");
+            System.out.println();
+            System.out.println("No Hay Turnos Disponibles");
+            System.out.println();
+            System.out.println("---------------------------------------------------------------");
+            return;
+        }
+        System.out.println("Turnos Disponibles:");
+        System.out.println("---------------------------------------------------------------");
+        System.out.printf("%-5s %-25s %-40s%n", "ID", "Fecha Turno", "Nombre de la Mascota");
+        for(TurnoMedico turno : turnosLibres){
+            System.out.printf("%-5d %-25s %-40s%n",
+                    turno.getId(),
+                    turno.getFechaTurno(),
+                    (turno.getMascota() != null) ? turno.getMascota().getNombre() : "Sin Mascota");
+        }
+        System.out.println("---------------------------------------------------------------");
+        System.out.println();
+
+        boolean estado = true;
+        while (estado) {
+            System.out.print("Ingrese el ID del turno que desea asignar (o 0 para salir): ");
+            int id = scanner.nextInt();
+
+            if (id == 0) {
+                System.out.println("Operación cancelada.");
+                break;
+            }
+            TurnoMedico nuevoTurno = turnoMedicoService.obtenerTurnoMedicoPorId((long) id);
+
+            if (nuevoTurno != null) {
+                nuevoTurno.setMedico(medico);
+                turnoMedicoService.actualizarTurnoMedico(nuevoTurno);
+                estado = false;
+                clearConsola();
+                System.out.println("Turno asignado correctamente.");
+                System.out.println();
+            } else {
+                clearConsola();
+                System.out.println("ID incorrecto. Por favor, ingrese un ID válido.");
+            }
+        }
+    }
     private Perro crearPerro(String nombre, String raza, String colorPelo, int edad, double peso) {
         Perro nuevoPerro = new Perro();
         nuevoPerro.setNombre(nombre);
@@ -156,7 +278,7 @@ public class VeterinariaInterfaz {
         nuevoGato.setPeso(peso);
         return nuevoGato;
     }
-    private void registrarMascota(Mascota mascota) {
+    private void agregarMascota(Mascota mascota) {
         if (mascota != null) {
             try {
                 mascotaService.crearMascota(mascota);
@@ -166,4 +288,10 @@ public class VeterinariaInterfaz {
             }
         }
     }
-}
+    private static void clearConsola() {
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println();
+    }
+    }
